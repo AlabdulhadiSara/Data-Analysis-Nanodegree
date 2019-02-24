@@ -1,0 +1,671 @@
+---
+title: "Exploratory Analysis for TED Talks"
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+author: By Sarah Alabdulhadi
+---
+
+TED is a global community, welcoming people from every discipline and culture who seek a deeper understanding of the world. TED is a nonprofit devoted to spreading ideas, usually in the form of short, powerful talks (18 minutes or less). TED began in 1984 as a conference where Technology, Entertainment and Design converged, and today covers almost all topics - from science to business to global issues - in more than 100 languages. Meanwhile, independently run TEDx events help share ideas in communities around the world.
+In this project, I will discover more about the world of TED, number of speakers, views, comments, languages, duration of the talk and date of the talk.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(anytime)
+library(scales)
+library(corrplot)
+library(data.table)
+setwd("~/DAND/EDA/project")
+TED = read.csv('ted.csv', header = TRUE)
+```
+
+
+
+The data is shared under the Creative Commons License (just like the TED Talks) and hosted on Kaggle. You can download it here: https://www.kaggle.com/rounakbanik/ted-talks
+
+The dataset contains metadata about all talks hosted on the TED.com website until 21 Sep 2017. The dataset contains 17 variables and 2550 observations. 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+names(TED)
+TED$num_speaker = as.factor(TED$num_speaker)
+TED$comments = as.factor(TED$comments)
+TED$languages = as.factor(TED$languages)
+TED$views = as.factor(TED$views)
+TED$duration.min = as.integer(TED$duration / 60)
+TED$duration.min = as.factor(TED$duration.min)
+TED$film_date = anydate(anytime(TED$film_date))
+TED$film_date.month = format(TED$film_date , "%b") 
+TED$film_date.month = factor(TED$film_date.month, month.abb, ordered = TRUE)
+```
+
+
+# Univariate Plots Section
+
+
+
+### Number of Speakers in a Talk:
+
+Almost every talk has just one Speaker; however about 50 talks has two speakers shared the stage.
+The maximum number of speakers for a talk is 5 speakers.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(as.numeric(TED$num_speaker))
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+##One Variable
+# Number of Speakers in each talk
+ggplot(TED, aes(x= num_speaker)) +
+  geom_bar(fill ="#003366", color = "#003366") +
+  theme_classic() + 
+  labs(x = " Number of Speakers", title = "Number of Speakers in each Talk")
+
+```
+
+
+### Number of Languages for a Talk:
+
+As TED Talks offered for free viewing online, it  had been watched over one billion times worldwide, and translated to more than 70 languages. 
+
+On average, A TED Talk is available in 28 different languages.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(as.numeric(TED$languages))
+```
+
+
+
+```{r echo=TRUE , message=FALSE, warning=FALSE}
+# Number of Languages for each talk
+
+ggplot(TED, aes(x= as.factor(languages))) + 
+  geom_bar(fill ="#003366", color = "#003366") +
+  theme_classic() + 
+  labs(x = " Number of Languages",
+       title = "Number of Languges for each Talk") +
+  scale_x_discrete(limits = c(1:72),
+                   breaks = seq(0,72,10))
+
+```
+
+
+### Number of Comments in a Talk:
+
+
+The average number of comments is 158.4.
+As shown in the graph the data is skewed to the right and most of the talks have between 63 comments and 219.8 comments. 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(as.numeric(TED$comments))
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Number of Comments in each talk 
+
+ggplot(TED, aes(x= comments)) + geom_bar(fill ="#003366", color = "#003366", alpha = 1/5) +
+  theme_classic() + 
+  labs(x = " Number of Comments ", title = " Number of Comments for each Talk")+
+  scale_x_discrete(limits = c(2:500),breaks = seq(0,500,50))
+
+```
+
+
+
+### Number of Talks in an Event:
+The Official TED events held a large number of talks between 85 and 70 talks per event.
+However, majority of events held less than 20 talks/event only. 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+head(summary(TED$event))
+```
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+tail(summary(TED$event))
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+barplot(table(TED$event), xlab = " Number of talks in each event", ylab = "count",
+        col = c("#003366"), 
+        main = "Number of Talks in each event", border = NA)
+```
+
+
+
+### Duration of a Talk:
+
+Most of the talks range between 8 mins and 16 mins, and On average the talks will last for about 12 mins.
+However, There are talks with more than 40 mins which looks unusual sinces TED talks should be between 2- 20 mins.
+```{r}
+summary(as.numeric(TED$duration.min))
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(TED, aes(x = duration.min )) + geom_bar(fill ="#003366", color = "#003366") +
+  theme_classic() + 
+  labs(x = " Duration of the talk", title = " Duration of each Talk") +
+  scale_x_discrete(limits = c(2:90), breaks = seq(0,90,10)) 
+
+
+```
+
+
+### Date of a Talk:
+As shown in the line chart below, the number of TED talks increses as time passes. This can show us how TED talks become more popular nowadays. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(TED, aes(x = film_date)) + geom_line(stat = "count",fill ="#003366", color = "#003366") + 
+  scale_x_date(breaks = seq(as.Date("2005-01-01"), as.Date("2016-01-01"),"2 years"), 
+               limits = as.Date(c('2005-01-01','2016-01-01'))) +
+  labs(x = "Date of the talk", title = "Date of the talk")+ theme_classic()
+
+```
+
+
+
+### Number of Talks by Months:
+
+February is clearly the most popular month for TED talks whereas August and January are the least popular. 
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(TED, aes(film_date.month))+ geom_bar(fill ="#003366",
+                                            color = "#003366") +
+  theme_classic() + 
+  labs(x = " Month ", title = " Month where the talk was filmed") 
+
+```
+
+
+
+
+
+
+# Univariate Analysis
+
+
+### What is the structure of your dataset?
+The dataset contains 2550 TED talks with 17 features.
+
+Features:
+
+name: The official name of the TED Talk. Includes the title and the speaker.
+
+title: The title of the talk
+
+description: A blurb of what the talk is about.
+
+main_speaker: The first named speaker of the talk.
+
+speaker_occupation: The occupation of the main speaker.
+
+num_speaker: The number of speakers in the talk.
+
+duration: The duration of the talk in seconds.
+
+event: The TED/TEDx event where the talk took place.
+
+film_date: The Unix timestamp of the filming.
+
+published_date: The Unix timestamp for the publication of the talk on TED.com
+
+comments: The number of first level comments made on the talk.
+
+tags: The themes associated with the talk.
+
+languages: The number of languages in which the talk is available.
+
+ratings: A stringified dictionary of the various ratings given to the talk (inspiring, fascinating, jaw dropping, etc.)
+
+related_talks: A list of dictionaries of recommended talks to watch next.
+
+url: The URL of the talk.
+
+views: The number of views on the talk.
+
+
+### What is/are the main feature(s) of interest in your dataset?
+
+The main features of the dataset are Views and comments. In this analysis I want to discover what makes a talk popular and how do peopple engage with TED talks.
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+The number of languages each talk has will help investigate how people engage with different talks.  
+
+### Did you create any new variables from existing variables in the dataset?
+
+I created a variable named duration.min to convert the duration of the talk from seconds to minutes.
+Moreover, I have classified the talks by month of filming date, So I can see when most of TED talks where filmed.
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust,
+### or change the form of the data? If so, why did you do this?
+
+The film date was given as Unix timestamp; therefore, I had to convert it to a date in the format YYYY-mm-dd.
+
+
+
+
+
+
+
+# Bivariate Plots Section
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+TED$comments = as.numeric(as.character(TED$comments))
+TED$duration.min = as.numeric(as.character(TED$duration.min))
+TED$languages = as.numeric(as.character(TED$languages))
+TED$num_speaker = as.numeric(TED$num_speaker)
+TED$views.hundrad = as.numeric(as.character(TED$views))/10000
+TED$views.hundrad = as.numeric(as.character(TED$views.hundrad))
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+TEDsub = data.frame(as.numeric(TED$comments),as.numeric(TED$duration.min),
+                    as.numeric(TED$languages),as.numeric(TED$num_speaker),
+                    as.numeric(TED$film_date.month), as.numeric(TED$views.hundrad))
+setnames(TEDsub, old = c("as.numeric.TED.comments.","as.numeric.TED.duration.min.",
+                         "as.numeric.TED.languages.",
+                         "as.numeric.TED.num_speaker.", "as.numeric.TED.film_date.month.",
+                         "as.numeric.TED.views.hundrad."),
+         new = c("Comments", "Duratioon", "Languages", "Speakers","Months","Views"))
+TEDcor = cor(TEDsub)
+corrplot(TEDcor, method = "number", tl.col = "black", tl.offset = 0.5, tl.srt = 360,
+         type = "lower")
+```
+
+
+
+### Correlation between Views and Comments:
+
+The correlation coefficient is almost 0.5 which suggests a medium to strong correlation between number of vews and number of comments.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+cor(TED$comments,TED$views.hundrad)
+TED$comments = as.factor(TED$comments)
+TED$views = as.factor(TED$views)
+TED$languages = as.factor(TED$languages)
+TED$num_speaker = as.factor(TED$num_speaker)
+TED$duration.min = as.factor(TED$duration.min)
+```
+
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x= comments, y= views )) + 
+  geom_jitter(fill ="#003366", color = "#003366",
+              alpha = 1/5) + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",
+       title = "Correlation between COmments and views") + 
+  scale_x_discrete(limits = c(0:1000), breaks = seq(0,1000,200)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000))
+
+```
+
+
+
+
+### Correlation between Views and Languages:
+
+As seen in the Scatterplot there is a relationship between number of views and languages for each talk.   
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cor(TED$views.hundrad, as.numeric(TED$languages))
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(TED, aes(x= languages, y= views )) +
+  geom_jitter(fill ="#003366",
+              color = "#003366",alpha = 1/5) +
+  theme_classic() + 
+  labs(x= "NUmber of languages", y = "Number of Views",
+       title = "Correlation between Languages and views") + 
+  scale_x_discrete(limits = c(2:70), breaks = seq(0,70,10)) +
+  scale_y_discrete(limits = c(0:4000000), 
+                   breaks = seq(0,4000000,1000000))
+
+```
+
+
+
+###Correlation between Views and Duration:
+
+However,Since most of the talks lasts for less than 20 mins,
+there is no obvious correlation between views and duration of the talk. 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cor(TED$views.hundrad, as.numeric(TED$duration.min))
+
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x= duration.min, y= views )) +
+  geom_jitter(fill ="#003366",
+              color = "#003366",alpha = 1/5) + theme_classic() + 
+  labs(x= "Duration of the talk", y = "Number of Views", 
+       title = "Correlation between Duration of the talk and number of views") + 
+  scale_x_discrete(limits = c(0:90), breaks = seq(0,90,10)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000))
+
+```
+
+
+
+### Correlation between Viwes and Month of Film Date:
+As discussed in the Univariate plot section, most of the talks were filmed in February;
+however, little of them were filmed in Augest and January. This clearly illustrates why February talks has highest number of viwes. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = film_date.month, y= views)) + 
+  geom_jitter(fill ="#003366",color = "#003366") + theme_classic() + 
+  labs(x= "Month", y = "Number of Views",
+       title = "Correlation between film date and views") + 
+   scale_y_discrete(limits = c(0:4000000), breaks = seq(0,4000000,1000000))
+
+```
+
+
+
+### Correlation between Views and Film Date:
+
+The below scatterplot, demonstares the relationship between number of views and film date.
+We can see that as time passes TED talks become more popular and number of views increases.   
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = film_date, y= views)) +
+  geom_jitter(fill ="#003366", color = "#003366",alpha = 1/5) + theme_classic() + 
+  labs(x= "Month", y = "Number of Views",
+       title = "Correlation between film date and views") + 
+  scale_y_discrete(limits = c(0:4000000), breaks = seq(0,4000000,1000000)) + 
+  scale_x_date(breaks = seq(as.Date("2005-01-01"), as.Date("2016-01-01"),"2 years"), 
+               limits = as.Date(c('2005-01-01','2016-01-01')))
+
+```
+
+
+
+### Correlation between Comments and Languages:
+
+Unexpectedly, there is a slight relationship between number of comments in each talk and languages available for it. 
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cor(as.numeric(TED$comments), as.numeric(TED$languages))
+
+```
+
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x= languages, y= comments )) +
+  geom_jitter(fill ="#003366",color = "#003366", alpha = 1/5) + 
+  theme_classic() + 
+  labs(x= "NUmber of languages", y = "Number of comments",
+       title = "Correlation between Languages and comments") + 
+  scale_x_discrete(limits = c(1:70), breaks = seq(0,70,10)) +
+  scale_y_discrete(limits = c(0:500), breaks = seq(0,500,100))
+
+```
+
+
+### Correlation between Comments and Duration:
+
+It clear now that duration of the talk has no effect on popularity of the talk. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cor(as.numeric(TED$comments), as.numeric(TED$duration.min))
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x= duration.min, y= comments )) +
+  geom_jitter(fill ="#003366",color = "#003366", alpha = 1/5) +
+  theme_classic() + 
+  labs(x= "Duration of the talk", y = "Number of comments",
+       title = "Correlation between Comments and Duration of the talk") + 
+  scale_x_discrete(limits = c(0:30),breaks = seq(0,30,5)) +
+  scale_y_discrete(limits = c(0:500), breaks = seq(0,500,100))
+
+```
+
+
+
+### Correlation between Comments and Month of Film Date:
+
+In this scatterplot, there is no clear correlation between comments and month of the film date since most talks has less than 300 commments. 
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = film_date.month, y= comments)) + 
+  geom_jitter(fill ="#003366",color = "#003366", alpha = 1/5) +
+  theme_classic() + 
+  labs(x= "Month", y = "Number of Views", 
+       title = "Correlation between film date and views") + 
+  scale_y_discrete(limits = c(0:500), breaks = seq(0,500,100))
+
+```
+
+
+
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. 
+###How did the feature(s) of interest vary with other features in the dataset?
+In this part of investigation, it clear that there is a relationship between
+the main features views and comments.
+Moreover, the relationship between views and other features is almost
+the same as the relationship between comments and other features.
+
+### Did you observe any interesting relationships between the other
+###features (not the main feature(s) of interest)?
+
+I found that duration of the talk does not affect the popularity of the talk which is not expect 
+since people always cares about the time when making a decission to attend the conference or not.
+
+### What was the strongest relationship you found?
+
+THe stongest relationship in the dataset is between comments and views.
+
+
+
+
+
+
+
+
+
+# Multivariate Plots Section
+
+
+### Correlation between Comments, Views and Languages:
+
+This visualizition makes it clear that as number of commments and viwes is high, the number of languages available of the talk will be high as well. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views, color = as.numeric(TED$languages))) +
+  geom_point() + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",color = " Languages ", 
+       title = "Correlation between Comments, Views and Languages") +
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000), 
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+### Correlation between Comments, Views and Number of Speakers:
+
+As we discover perviously most of the talks has one speaker only, and from the plot we can see that there is no correlation between number of speakers and popularity of the talk. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views, color = TED$num_speaker)) +
+  geom_point() + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",color = " Speakers ",
+       title = "Correlation between Comments, Views and Number of Speakers") + 
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+
+### Correlation between Comments, Views and Duration of the talk:
+
+As we observed in the bivariate analysis, there is no clear coorelation between 
+number of Comments or Viwes and the duration of the talk.
+However, this plot shows that most of the talkls lasts for less than 20 mins. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views, color = as.numeric(TED$duration.min))) + 
+  geom_point() + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",color = " Duratoin ",
+       title = " Correlation between Comments, Views and Duration of the talk") +
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+
+### Correlation between Comments, Views and Month of Film Date:
+
+Let's focus on the number of talks were held in February, It is clear that as number of
+talks increases the number of comments and views will increase as well. 
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views, color = as.numeric(TED$film_date.month))) +
+  geom_jitter() + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",color = " Months " ,
+       title = "Correlation between Comments, Views and Month of Film Date") + 
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there 
+###features that strengthened each other in terms of looking at your feature(s) of interest?
+
+The Correlation between Comments and Views perfectly worked together with each and every other feature. 
+
+### Were there any interesting or surprising interactions between features?
+No.
+
+
+
+
+
+# Final Plots and Summary
+
+
+
+### Plot One
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(TED, aes(x = duration.min )) + geom_bar(fill ="#003366", color = "#003366") + 
+  theme_classic() + 
+  labs(x = " Duration of the talk(Minutes)", title = " Duration of each Talk") +
+  scale_x_discrete(limits = c(2:90), breaks = seq(0,90,10)) 
+
+
+```
+
+
+
+### Description One
+
+This visualizition is very interesting! The power of TED is that its talks are very short and beneficial.
+This support the idea that great thoughts can be deliviered fastly and affectively.What
+makes TED talks very common and famous that
+it is short and meaningful; this explains why  most talks are less than 20 mins.
+
+
+
+
+
+### Plot Two
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views)) + geom_point(col = "#003366") +
+  theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",
+       title = " Correlation between Comments and Views") + 
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+### Description Two
+
+This plot shows the modearate positive relationship between the main features of the dataset Comments and Views.
+The more popular tha talk is,
+the more active it is. Having high number of speed means popular talks, means people engage more with the talk. 
+
+
+
+
+
+### Plot Three
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(TED, aes(x = TED$comments, y = TED$views, color = as.numeric(TED$languages))) + 
+  geom_point() + theme_classic() + 
+  labs(x= "NUmber of Comments", y = "Number of Views",color = " Languages ",
+       title = "Correlation between Comments, Views and Languages") +
+  scale_x_discrete(limits = c(0:500), breaks = seq(0,500,100)) +
+  scale_y_discrete(limits = c(0:4000000),
+                   breaks = seq(0,4000000,1000000)) 
+
+```
+
+
+
+### Description Three
+
+This plot beautifully shows the strong positive correlation between the three most
+important features Comments, Views and Languages.
+As the talk becomes more popular, people would translate it to other languages. 
+
+
+
+
+# Reflection
+
+The TED talks dataset has information about 2550 talks and 17 variables. Initially, I tried to get a sense of what 
+factors might affect the popularity of a talk.I chose to focus on number of speakers, views, comments, languages, duration 
+of the talk and date of the talk to investigate which features play the most significant role in the popularity of a talk.
+
+First of all, most popular talks have a high number of views which definitely correct. Number of comments in each talk also indicates that
+this talk is popular. Moreover, popular talks are traslate to too many languages, so it reaches more audience. secondly, I found that most of
+the talks were held in Februray, and least were held in Janurary and Augest. 
+
+However, I found that there is no correlation between the duration of a talk and its popularity. 
+
+One last idea for future exploration would have been to analyze the ratings of a talk and explore more about audience\'s opinion about each talk,
+and if there is a positive or negative correlation between the ratings and our main features. 
+
+
