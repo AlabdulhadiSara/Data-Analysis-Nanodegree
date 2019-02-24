@@ -1,5 +1,5 @@
 # Data-Analyst-Nanodegree-Projects
-## Sarah Alabdulhadi,
+##### Sarah Alabdulhadi,
 
 This repository contains the different projects I did for completion of the Data Analyst Nano-Degree (DAND) offered by Udacity.
 
@@ -22,7 +22,7 @@ Choose one of Udacity's curated datasets and investigate it using NumPy and Pand
 
 
 ### Part 4: Data Wrangling
-Choose a region of the world from [www.openstreetmap.org](www.openstreetmap.org) and then use data wrangling techniques to audit and clean the data. You'll then use a database to query the cleaned data.
+Choose a region of the world from [www.openstreetmap.org](https://www.openstreetmap.org) and then use data wrangling techniques to audit and clean the data. You'll then use a database to query the cleaned data.
 - **[Project: Wrangle OpenStreetMap Data](https://github.com/AlabdulhadiSara/Data-Analysis-Nanodegree/tree/master/Project%204)**
   
   
